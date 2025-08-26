@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Upload, Camera, MapPin, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { MobileFileInput } from "@/components/ui/mobile-file-input";
 
 interface Quest {
   id: string;
@@ -24,7 +23,6 @@ const SubmitQuest = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [quest, setQuest] = useState<Quest | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -92,22 +90,24 @@ const SubmitQuest = () => {
     }
 
     // Check file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'];
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/quicktime', 'video/webm',
+      'application/pdf'
+    ];
     if (!allowedTypes.includes(file.type)) {
-      return "Please select an image (JPEG, PNG, GIF, WebP) or video (MP4, MOV, WebM) file";
+      return "Please select an image (JPEG, PNG, GIF, WebP), video (MP4, MOV, WebM), or PDF file";
     }
 
     return null;
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('File select handler triggered');
     const file = event.target.files?.[0];
     if (file) {
-      console.log('File selected:', file.name, file.type, file.size);
+      console.log('Selected file:', file.name);
       const error = validateFile(file);
       if (error) {
-        console.log('File validation error:', error);
         setFileError(error);
         setSelectedFile(null);
         setPreviewUrl(null);
@@ -120,75 +120,13 @@ const SubmitQuest = () => {
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      console.log('File preview URL created');
-    } else {
-      console.log('No file selected');
     }
-  };
-
-  const handleFileClick = () => {
-    console.log('File click handler triggered');
-    if (fileInputRef.current) {
-      try {
-        // Clear the input value first to ensure it triggers even if same file is selected
-        fileInputRef.current.value = '';
-        
-        // Add a small delay to ensure the DOM is ready
-        setTimeout(() => {
-          if (fileInputRef.current) {
-            fileInputRef.current.click();
-            console.log('File input clicked successfully');
-          }
-        }, 100);
-      } catch (error) {
-        console.error('Error clicking file input:', error);
-        // Fallback: try to trigger the file dialog programmatically
-        try {
-          const event = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: true
-          });
-          fileInputRef.current.dispatchEvent(event);
-        } catch (fallbackError) {
-          console.error('Fallback also failed:', fallbackError);
-        }
-      }
-    } else {
-      console.error('File input ref is null');
-    }
-  };
-
-  const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      const error = validateFile(file);
-      if (error) {
-        setFileError(error);
-        return;
-      }
-
-      setFileError(null);
-      setSelectedFile(file);
-      
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
   };
 
   const removeFile = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setFileError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const getCurrentLocation = () => {
@@ -349,25 +287,31 @@ const SubmitQuest = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* File Upload */}
               <div>
-                <Label htmlFor="photo">Photo/Video Evidence</Label>
+                <Label htmlFor="photo">Photo/Video/PDF Evidence</Label>
                 <div className="mt-2">
                   {!selectedFile ? (
-                    <MobileFileInput
-                      onFileSelect={(file) => {
-                        const error = validateFile(file);
-                        if (error) {
-                          setFileError(error);
-                          return;
-                        }
-                        setFileError(null);
-                        setSelectedFile(file);
-                        const url = URL.createObjectURL(file);
-                        setPreviewUrl(url);
-                      }}
-                      accept="image/*,video/*"
-                      maxSize={10 * 1024 * 1024} // 10MB
-                      disabled={submitting}
-                    />
+                    <label
+                      className="relative block rounded-lg border-2 border-dashed p-6 text-center transition-all duration-200 ease-in-out cursor-pointer select-none border-border bg-background hover:border-primary hover:bg-accent/20"
+                    >
+                      <input
+                        id="photo"
+                        type="file"
+                        accept="image/*,video/*,application/pdf"
+                        onChange={handleFileSelect}
+                        capture={isMobile ? "environment" : undefined}
+                        disabled={submitting}
+                        className="hidden"
+                      />
+                      <div className="flex flex-col items-center justify-center space-y-3 pointer-events-none">
+                        <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full">
+                          <Upload className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-foreground">Tap to Upload</p>
+                          <p className="text-xs text-muted-foreground">Images, videos or PDF (MAX. 10MB)</p>
+                        </div>
+                      </div>
+                    </label>
                   ) : (
                     <div className="relative border-2 border-green-500/20 bg-green-500/5 rounded-lg p-4">
                       <div className="relative w-full h-64">
@@ -377,6 +321,10 @@ const SubmitQuest = () => {
                             alt="Preview"
                             className="w-full h-full object-cover rounded-lg"
                           />
+                        ) : selectedFile.type === 'application/pdf' ? (
+                          <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                            PDF selected: {selectedFile.name}
+                          </div>
                         ) : (
                           <video
                             src={previewUrl!}
