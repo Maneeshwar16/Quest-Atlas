@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Compass, MapPin, Star, Trophy, Users, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggleButton from '@/components/ui/theme-toggle-button';
 
 const Index = () => {
   const { user } = useAuth();
@@ -19,6 +20,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggleButton 
+          variant="circle-blur"
+          start="center"
+        />
+      </div>
+      
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center space-y-8 mb-16">

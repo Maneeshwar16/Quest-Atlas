@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Upload, Camera, MapPin, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileFileInput } from "@/components/ui/mobile-file-input";
 
 interface Quest {
   id: string;
@@ -129,17 +130,29 @@ const SubmitQuest = () => {
     console.log('File click handler triggered');
     if (fileInputRef.current) {
       try {
-        fileInputRef.current.click();
-        console.log('File input clicked successfully');
+        // Clear the input value first to ensure it triggers even if same file is selected
+        fileInputRef.current.value = '';
+        
+        // Add a small delay to ensure the DOM is ready
+        setTimeout(() => {
+          if (fileInputRef.current) {
+            fileInputRef.current.click();
+            console.log('File input clicked successfully');
+          }
+        }, 100);
       } catch (error) {
         console.error('Error clicking file input:', error);
         // Fallback: try to trigger the file dialog programmatically
-        const event = new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        });
-        fileInputRef.current.dispatchEvent(event);
+        try {
+          const event = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          });
+          fileInputRef.current.dispatchEvent(event);
+        } catch (fallbackError) {
+          console.error('Fallback also failed:', fallbackError);
+        }
       }
     } else {
       console.error('File input ref is null');
@@ -295,7 +308,7 @@ const SubmitQuest = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -312,10 +325,10 @@ const SubmitQuest = () => {
         {/* Quest Context */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-xl text-gray-900">
+            <CardTitle className="text-xl">
               Submitting for: {quest.title}
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription>
               {quest.description}
             </CardDescription>
           </CardHeader>
@@ -338,73 +351,26 @@ const SubmitQuest = () => {
               <div>
                 <Label htmlFor="photo">Photo/Video Evidence</Label>
                 <div className="mt-2">
-                  <div 
-                    className={`relative flex items-center justify-center w-full border-2 border-dashed rounded-lg cursor-pointer transition-colors touch-manipulation ${
-                      fileError 
-                        ? 'border-red-300 bg-red-50 hover:bg-red-100 active:bg-red-200' 
-                        : selectedFile 
-                        ? 'border-green-300 bg-green-50' 
-                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100 active:bg-gray-200'
-                    } ${isMobile ? 'h-40 min-h-[160px]' : 'h-32'}`}
-                    onClick={handleFileClick}
-                    onTouchStart={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleFileClick();
-                    }}
-                    onDrop={handleFileDrop}
-                    onDragOver={handleDragOver}
-                    style={{ 
-                      WebkitTapHighlightColor: 'transparent',
-                      WebkitTouchCallout: 'none',
-                      WebkitUserSelect: 'none',
-                      userSelect: 'none'
-                    }}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      id="photo"
-                      type="file"
-                      className="hidden"
+                  {!selectedFile ? (
+                    <MobileFileInput
+                      onFileSelect={(file) => {
+                        const error = validateFile(file);
+                        if (error) {
+                          setFileError(error);
+                          return;
+                        }
+                        setFileError(null);
+                        setSelectedFile(file);
+                        const url = URL.createObjectURL(file);
+                        setPreviewUrl(url);
+                      }}
                       accept="image/*,video/*"
-                      onChange={handleFileSelect}
-                      capture={isMobile ? "environment" : undefined}
+                      maxSize={10 * 1024 * 1024} // 10MB
+                      disabled={submitting}
                     />
-                    
-                    {!selectedFile ? (
-                      <div className="flex flex-col items-center justify-center p-6 text-center">
-                        <Upload className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8'} mb-4 text-gray-500`} />
-                        <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">
-                            {isMobile ? 'Tap to upload or take photo' : 'Click to upload'}
-                          </span>
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          PNG, JPG, MP4 (MAX. 10MB)
-                        </p>
-                        {isMobile && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            📱 Camera access available
-                          </p>
-                        )}
-                        {/* Mobile fallback button */}
-                        {isMobile && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="mt-3 px-4 py-2 text-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFileClick();
-                            }}
-                          >
-                            📷 Take Photo / Choose File
-                          </Button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="relative w-full h-full">
+                  ) : (
+                    <div className="relative border-2 border-green-500/20 bg-green-500/5 rounded-lg p-4">
+                      <div className="relative w-full h-64">
                         {selectedFile.type.startsWith('image/') ? (
                           <img
                             src={previewUrl!}
@@ -423,27 +389,21 @@ const SubmitQuest = () => {
                           variant="destructive"
                           size="sm"
                           className="absolute top-2 right-2 h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFile();
-                          }}
+                          onClick={removeFile}
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    )}
-                  </div>
-                  
-                  {fileError && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-                      <AlertCircle className="h-4 w-4" />
-                      {fileError}
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </div>
                     </div>
                   )}
                   
-                  {selectedFile && (
-                    <div className="mt-2 text-sm text-gray-600">
-                      Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  {fileError && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      {fileError}
                     </div>
                   )}
                 </div>
@@ -487,7 +447,7 @@ const SubmitQuest = () => {
               <Button
                 type="submit"
                 disabled={submitting || !description.trim()}
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                className="w-full"
               >
                 {submitting ? "Submitting..." : "Submit Quest"}
               </Button>

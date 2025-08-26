@@ -18,6 +18,7 @@ import { AppSidebar } from "@/components/navigation/AppSidebar";
 import { ProfileDropdown } from "@/components/navigation/ProfileDropdown";
 import { SocialMediaFeed } from "@/components/social/SocialMediaFeed";
 import { usePerformance } from "@/hooks/use-performance";
+import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 
 interface Quest {
   id: string;
@@ -143,6 +144,7 @@ const Home = () => {
                   <h2 className="text-lg font-semibold">Welcome back!</h2>
                   <p className="text-sm text-muted-foreground">Ready for your next adventure?</p>
                 </div>
+                <ThemeToggleButton />
                 <NotificationCenter />
                 <ProfileDropdown />
               </div>

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, CheckCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileFileInput } from '@/components/ui/mobile-file-input';
 
 export default function MobileTest() {
   const isMobile = useIsMobile();
@@ -48,7 +49,7 @@ export default function MobileTest() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-md mx-auto space-y-4">
         <Card>
           <CardHeader>
@@ -61,39 +62,31 @@ export default function MobileTest() {
               <p><strong>User Agent:</strong> {navigator.userAgent.substring(0, 50)}...</p>
             </div>
 
-            {/* Test Area 1: Direct file input */}
-            <div className="space-y-2">
-              <h3 className="font-medium">Test 1: Direct File Input</h3>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleFileSelect}
-                capture={isMobile ? "environment" : undefined}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-            </div>
+                         {/* Test Area 1: Direct file input */}
+             <div className="space-y-2">
+               <h3 className="font-medium">Test 1: Direct File Input</h3>
+               <input
+                 ref={fileInputRef}
+                 type="file"
+                 accept="image/*,video/*"
+                 onChange={handleFileSelect}
+                 capture={isMobile ? "environment" : undefined}
+                 className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+               />
+             </div>
 
-            {/* Test Area 2: Custom styled area */}
-            <div className="space-y-2">
-              <h3 className="font-medium">Test 2: Custom Styled Area</h3>
-              <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 active:bg-gray-100 touch-manipulation"
-                onClick={handleFileClick}
-                onTouchStart={handleTouchStart}
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  WebkitTouchCallout: 'none',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none'
-                }}
-              >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                <p className="text-sm text-gray-600">
-                  {isMobile ? 'Tap here to upload' : 'Click here to upload'}
-                </p>
-              </div>
-            </div>
+                         {/* Test Area 2: Mobile File Input Component */}
+             <div className="space-y-2">
+               <h3 className="font-medium">Test 2: Mobile File Input Component</h3>
+               <MobileFileInput
+                 onFileSelect={(file) => {
+                   addLog(`MobileFileInput: File selected - ${file.name}`);
+                   setSelectedFile(file);
+                 }}
+                 accept="image/*,video/*"
+                 maxSize={10 * 1024 * 1024}
+               />
+             </div>
 
             {/* Test Area 3: Button approach */}
             <div className="space-y-2">
@@ -107,33 +100,33 @@ export default function MobileTest() {
               </Button>
             </div>
 
-            {/* Results */}
-            {selectedFile && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-2 text-green-700">
-                  <CheckCircle className="h-4 w-4" />
-                  <span className="font-medium">File Selected Successfully!</span>
-                </div>
-                <p className="text-sm text-green-600 mt-1">
-                  {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                </p>
-              </div>
-            )}
+                         {/* Results */}
+             {selectedFile && (
+               <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                 <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                   <CheckCircle className="h-4 w-4" />
+                   <span className="font-medium">File Selected Successfully!</span>
+                 </div>
+                 <p className="text-sm text-green-600/80 dark:text-green-400/80 mt-1">
+                   {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                 </p>
+               </div>
+             )}
 
-            {/* Logs */}
-            <div className="space-y-2">
-              <h3 className="font-medium">Debug Logs:</h3>
-              <div className="max-h-40 overflow-y-auto space-y-1 bg-gray-100 p-2 rounded text-xs">
-                {logs.length === 0 ? (
-                  <p className="text-gray-500">No logs yet</p>
-                ) : (
-                  logs.map((log, index) => (
-                    <div key={index} className="text-gray-700">
-                      {log}
-                    </div>
-                  ))
-                )}
-              </div>
+                         {/* Logs */}
+             <div className="space-y-2">
+               <h3 className="font-medium">Debug Logs:</h3>
+               <div className="max-h-40 overflow-y-auto space-y-1 bg-muted p-2 rounded text-xs">
+                 {logs.length === 0 ? (
+                   <p className="text-muted-foreground">No logs yet</p>
+                 ) : (
+                   logs.map((log, index) => (
+                     <div key={index} className="text-foreground">
+                       {log}
+                     </div>
+                   ))
+                 )}
+               </div>
               <Button
                 onClick={() => setLogs([])}
                 size="sm"

@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import Community from "./pages/Community";
 import MobileTest from "./pages/MobileTest";
 
+
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
